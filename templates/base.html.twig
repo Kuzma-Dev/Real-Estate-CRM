@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+        <script src="https://cdn.tailwindcss.com"></script>
+        {% block stylesheets %}
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        {% endblock %}
+        {% block javascripts %}{% endblock %}
+    </head>
+    <body class="bg-gray-100 min-h-screen">
+        <nav class="bg-white shadow-lg">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <a href="{{ path('app_home') }}" class="text-xl font-bold text-gray-800">E-Shop</a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="{{ path('app_home') }}" class="text-gray-600 hover:text-gray-800">Home</a>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <a href="{{ path('app_admin_index') }}" class="text-gray-600 hover:text-gray-800">Admin Panel</a>
+                            <form method="post" action="{{ path('app_admin_logout') }}" class="inline">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                                <button type="submit" class="text-gray-600 hover:text-gray-800 bg-transparent border-0 p-0">Logout</button>
+                            </form>
+                        {% elseif is_granted('ROLE_USER') %}
+                            <a href="{{ path('app_cart_index') }}" class="text-gray-600 hover:text-gray-800">Cart</a>
+                            <a href="{{ path('app_order_index') }}" class="text-gray-600 hover:text-gray-800">My Orders</a>
+                            <form method="post" action="{{ path('app_logout') }}" class="inline">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                                <button type="submit" class="text-gray-600 hover:text-gray-800 bg-transparent border-0 p-0">Logout</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ path('app_login') }}" class="text-gray-600 hover:text-gray-800">Login</a>
+                            <a href="{{ path('app_register') }}" class="text-gray-600 hover:text-gray-800">Register</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            {% block body %}{% endblock %}
+        </main>
+
+        <footer class="bg-white shadow-lg mt-12">
+            <div class="container mx-auto px-4 py-8">
+                <div class="text-center text-gray-600">
+                    <p>&copy; {{ "now"|date("Y") }} E-Shop. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </body>
+</html>

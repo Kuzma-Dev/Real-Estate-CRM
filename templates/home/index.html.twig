@@ -1,0 +1,196 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Welcome to Our Store{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">Welcome to Our E-Shop</h1>
+            <p class="text-xl text-gray-600">Discover our amazing products at great prices</p>
+        </header>
+
+        <section class="mb-12">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Search Products</h2>
+                <form method="get" action="{{ path('app_home') }}" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                            <input type="text" name="search" id="search" value="{{ search }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="Search products...">
+                        </div>
+                        <div>
+                            <label for="min_price" class="block text-sm font-medium text-gray-700">Min Price</label>
+                            <input type="number" name="min_price" id="min_price" value="{{ min_price }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="Min price">
+                        </div>
+                        <div>
+                            <label for="max_price" class="block text-sm font-medium text-gray-700">Max Price</label>
+                            <input type="number" name="max_price" id="max_price" value="{{ max_price }}" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="Max price">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <a href="{{ path('app_home') }}" class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+                            Clear
+                        </a>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <h2 class="text-2xl font-semibold mb-6">Featured Products</h2>
+            <div class="flex justify-end mb-4">
+                <a href="{{ path('app_cart_index') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
+                    View Cart
+                </a>
+            </div>
+            <div class="text-gray-600 mb-4">
+                Total products: {{ products|length }}
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for product in products %}
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        {% if product.imageName %}
+                            <img src="{{ asset('uploads/products/' ~ product.imageName) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                        {% else %}
+                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                                <span class="text-gray-400">No image available</span>
+                            </div>
+                        {% endif %}
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold mb-2">{{ product.name }}</h3>
+                            <p class="text-gray-600 mb-4">{{ product.description|slice(0, 100) }}{% if product.description|length > 100 %}...{% endif %}</p>
+                            <div class="flex flex-col space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xl font-bold text-blue-600">${{ product.price|number_format(2) }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="decrementQuantity({{ product.id }})" class="bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">-</button>
+                                    <input type="number" id="quantity-{{ product.id }}" value="1" min="1" class="w-16 text-center border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <button type="button" onclick="incrementQuantity({{ product.id }})" class="bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">+</button>
+                                </div>
+                                <form method="post" action="{{ path('app_cart_add', {'id': product.id}) }}" class="add-to-cart-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('add_to_cart') }}">
+                                    <input type="hidden" name="quantity" id="form-quantity-{{ product.id }}" value="1">
+                                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                                        Add to Cart
+                                    </button>
+                                </form>
+                                <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-center text-blue-500 hover:text-blue-700">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-span-full text-center py-8">
+                        <p class="text-gray-500">No products found</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-gray-100 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Why Choose Us?</h2>
+                <ul class="space-y-2">
+                    <li class="flex items-center">
+                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Fast and reliable shipping
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Quality products
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Excellent customer service
+                    </li>
+                </ul>
+            </div>
+            <div class="bg-gray-100 rounded-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Quick Links</h2>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ path('app_product_index') }}" class="text-blue-500 hover:text-blue-700">Browse All Products</a>
+                    </li>
+                    <li>
+                        <a href="{{ path('app_cart_index') }}" class="text-blue-500 hover:text-blue-700">View Shopping Cart</a>
+                    </li>
+                    <li>
+                        <a href="{{ path('app_order_index') }}" class="text-blue-500 hover:text-blue-700">View Orders</a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        function incrementQuantity(productId) {
+            const input = document.getElementById(`quantity-${productId}`);
+            const formInput = document.getElementById(`form-quantity-${productId}`);
+            const newValue = parseInt(input.value) + 1;
+            input.value = newValue;
+            formInput.value = newValue;
+        }
+
+        function decrementQuantity(productId) {
+            const input = document.getElementById(`quantity-${productId}`);
+            const formInput = document.getElementById(`form-quantity-${productId}`);
+            const newValue = parseInt(input.value) - 1;
+            if (newValue >= 1) {
+                input.value = newValue;
+                formInput.value = newValue;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.add-to-cart-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const alert = document.createElement('div');
+                            alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+                            alert.textContent = data.message;
+                            document.body.appendChild(alert);
+                            setTimeout(() => alert.remove(), 3000);
+                        } else {
+                            throw new Error(data.message || 'Error adding product to cart');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        const alert = document.createElement('div');
+                        alert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
+                        alert.textContent = error.message || 'Error adding product to cart';
+                        document.body.appendChild(alert);
+                        setTimeout(() => alert.remove(), 3000);
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %} 

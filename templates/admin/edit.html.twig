@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Edit Product</h1>
+            <a href="{{ path('app_admin_index') }}" class="text-blue-500 hover:text-blue-700">
+                Back to list
+            </a>
+        </div>
+
+        {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+            <div>
+                {{ form_label(form.name, 'Name', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
+                {{ form_widget(form.name) }}
+                {{ form_errors(form.name) }}
+            </div>
+
+            <div>
+                {{ form_label(form.description, 'Description', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
+                {{ form_widget(form.description) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div>
+                {{ form_label(form.price, 'Price', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
+                {{ form_widget(form.price) }}
+                {{ form_errors(form.price) }}
+            </div>
+
+            <div>
+                {{ form_label(form.imageFile, 'Product Image', {'label_attr': {'class': 'block text-sm font-medium text-gray-700'}}) }}
+                {{ form_widget(form.imageFile) }}
+                {{ form_errors(form.imageFile) }}
+                {% if product.imageName %}
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">Current image:</p>
+                        <img src="{{ asset('uploads/products/' ~ product.imageName) }}" alt="{{ product.name }}" class="h-32 w-32 object-cover rounded mt-2">
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Update Product
+                </button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %} 

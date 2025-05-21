@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Shopping Cart</h1>
+
+        {% if products|length > 0 %}
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in products %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        {% if item.product.imageName %}
+                                            <img src="{{ asset('uploads/products/' ~ item.product.imageName) }}" alt="{{ item.product.name }}" class="h-16 w-16 object-cover rounded">
+                                        {% else %}
+                                            <div class="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
+                                                <span class="text-gray-400">No image</span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ item.product.name }}</div>
+                                            <div class="text-sm text-gray-500">{{ item.product.description }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">${{ item.product.price|number_format(2) }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="updateQuantity({{ item.product.id }}, 'decrease')" class="text-gray-500 hover:text-gray-700">-</button>
+                                        <span class="text-sm text-gray-900">{{ item.quantity }}</span>
+                                        <button onclick="updateQuantity({{ item.product.id }}, 'increase')" class="text-gray-500 hover:text-gray-700">+</button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">${{ (item.product.price * item.quantity)|number_format(2) }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button onclick="removeFromCart({{ item.product.id }})" class="text-red-600 hover:text-red-900">Remove</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div class="text-lg font-medium text-gray-900">Total: ${{ total|number_format(2) }}</div>
+                        <div class="space-x-4">
+                            <button onclick="clearCart()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Clear Cart</button>
+                            <a href="{{ path('app_order_new') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Checkout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <h2 class="text-2xl font-semibold text-gray-600">Your cart is empty</h2>
+                <p class="mt-2 text-gray-500">Add some products to your cart to continue shopping.</p>
+                <a href="{{ path('app_home') }}" class="mt-4 inline-block bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Continue Shopping</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+    function updateQuantity(productId, action) {
+        const url = action === 'increase' 
+            ? `{{ path('app_cart_add', {id: 'PRODUCT_ID'}) }}`.replace('PRODUCT_ID', productId)
+            : `{{ path('app_cart_remove', {id: 'PRODUCT_ID'}) }}`.replace('PRODUCT_ID', productId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function removeFromCart(productId) {
+        if (confirm('Are you sure you want to remove this item from your cart?')) {
+            fetch(`{{ path('app_cart_remove', {id: 'PRODUCT_ID'}) }}`.replace('PRODUCT_ID', productId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function clearCart() {
+        if (confirm('Are you sure you want to clear your cart?')) {
+            fetch('{{ path('app_cart_clear') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+    </script>
+{% endblock %} 

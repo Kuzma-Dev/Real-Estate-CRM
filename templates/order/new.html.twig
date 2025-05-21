@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Checkout</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Order Summary -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+                <div class="space-y-4">
+                    {% for item in products %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                {% if item.product.imageName %}
+                                    <img src="{{ asset('uploads/products/' ~ item.product.imageName) }}" alt="{{ item.product.name }}" class="h-16 w-16 object-cover rounded">
+                                {% else %}
+                                    <div class="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
+                                        <span class="text-gray-400">No image</span>
+                                    </div>
+                                {% endif %}
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.product.name }}</div>
+                                    <div class="text-sm text-gray-500">Quantity: {{ item.quantity }}</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-900">${{ (item.product.price * item.quantity)|number_format(2) }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="border-t mt-4 pt-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-medium text-gray-900">Total:</span>
+                        <span class="text-lg font-medium text-gray-900">${{ total|number_format(2) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold mb-4">Complete Your Order</h2>
+                <form method="post" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input type="text" id="name" name="name" value="{{ app.user.name }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" name="email" value="{{ app.user.email }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-gray-700">Shipping Address</label>
+                        <textarea id="address" name="address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required></textarea>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

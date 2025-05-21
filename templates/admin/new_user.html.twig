@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Admin User{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Create New Admin User</h1>
+
+        {{ form_start(form, {'attr': {'class': 'bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4'}}) }}
+            <div class="mb-4">
+                {{ form_label(form.email, 'Email', {'label_attr': {'class': 'block text-gray-700 text-sm font-bold mb-2'}}) }}
+                {{ form_widget(form.email, {'attr': {'class': 'shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'}}) }}
+                {{ form_errors(form.email) }}
+            </div>
+
+            <div class="mb-4">
+                {{ form_label(form.password.first, 'Password', {'label_attr': {'class': 'block text-gray-700 text-sm font-bold mb-2'}}) }}
+                {{ form_widget(form.password.first, {'attr': {'class': 'shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'}}) }}
+                {{ form_errors(form.password.first) }}
+            </div>
+
+            <div class="mb-6">
+                {{ form_label(form.password.second, 'Repeat Password', {'label_attr': {'class': 'block text-gray-700 text-sm font-bold mb-2'}}) }}
+                {{ form_widget(form.password.second, {'attr': {'class': 'shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'}}) }}
+                {{ form_errors(form.password.second) }}
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Create Admin User
+                </button>
+                <a href="{{ path('app_admin_users') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                    Back to User List
+                </a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %} 
