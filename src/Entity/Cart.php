@@ -15,6 +15,10 @@ class Cart
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\ManyToOne(inversedBy: 'carts')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Customer $customer = null;
+
     #[ORM\OneToMany(mappedBy: 'cart', targetEntity: CartItem::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $items;
 
@@ -26,6 +30,17 @@ class Cart
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCustomer(): ?Customer
+    {
+        return $this->customer;
+    }
+
+    public function setCustomer(?Customer $customer): static
+    {
+        $this->customer = $customer;
+        return $this;
     }
 
     /**
@@ -65,5 +80,14 @@ class Cart
         }
 
         return $this;
+    }
+
+    public function getTotal(): float
+    {
+        $total = 0;
+        foreach ($this->items as $item) {
+            $total += $item->getProduct()->getPrice() * $item->getQuantity();
+        }
+        return $total;
     }
 } 

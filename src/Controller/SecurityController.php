@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Customer;
+use App\Entity\Cart;
 use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -49,6 +50,12 @@ class SecurityController extends AbstractController
             $user->setRoles(['ROLE_USER']);
 
             $entityManager->persist($user);
+            $entityManager->flush();
+
+            // Create a new cart for the user
+            $cart = new Cart();
+            $cart->setCustomer($user);
+            $entityManager->persist($cart);
             $entityManager->flush();
 
             return $this->redirectToRoute('app_login');

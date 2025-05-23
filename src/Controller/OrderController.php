@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Cart;
 
 #[Route('/order')]
 class OrderController extends AbstractController
@@ -26,64 +27,47 @@ class OrderController extends AbstractController
     }
 
     #[Route('/new', name: 'app_order_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, ProductRepository $productRepository, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $cart = $request->getSession()->get('cart', []);
-        
-        if (empty($cart)) {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        $cart = $this->getCart($entityManager);
+        if (!$cart || $cart->getItems()->isEmpty()) {
             $this->addFlash('error', 'Your cart is empty');
             return $this->redirectToRoute('app_cart_index');
         }
 
-        if ($request->isMethod('POST')) {
-            $order = new Order();
-            $order->setCustomer($this->getUser());
-            $order->setStatus('pending');
-            $order->setTotal(0);
+        $order = new Order();
+        $order->setCustomer($this->getUser());
+        $order->setStatus('pending');
+        $order->setTotal($cart->getTotal());
 
-            $total = 0;
-            foreach ($cart as $id => $quantity) {
-                $product = $productRepository->find($id);
-                if ($product) {
-                    $orderItem = new OrderItem();
-                    $orderItem->setOrder($order);
-                    $orderItem->setProduct($product);
-                    $orderItem->setQuantity($quantity);
-                    $orderItem->setPrice($product->getPrice());
-                    
-                    $entityManager->persist($orderItem);
-                    $total += $product->getPrice() * $quantity;
-                }
+        if ($request->isMethod('POST')) {
+            $order->setFirstName($request->request->get('firstName'));
+            $order->setLastName($request->request->get('lastName'));
+            $order->setEmail($request->request->get('email'));
+            $order->setAddress($request->request->get('address'));
+            $order->setPhone($request->request->get('phone'));
+
+            foreach ($cart->getItems() as $cartItem) {
+                $orderItem = new OrderItem();
+                $orderItem->setOrder($order);
+                $orderItem->setProduct($cartItem->getProduct());
+                $orderItem->setQuantity($cartItem->getQuantity());
+                $orderItem->setPrice($cartItem->getProduct()->getPrice());
+                $entityManager->persist($orderItem);
             }
 
-            $order->setTotal($total);
             $entityManager->persist($order);
+            $entityManager->remove($cart);
             $entityManager->flush();
 
-            // Clear the cart
-            $request->getSession()->remove('cart');
-
             $this->addFlash('success', 'Your order has been placed successfully');
-            return $this->redirectToRoute('app_order_index');
-        }
-
-        $products = [];
-        $total = 0;
-
-        foreach ($cart as $id => $quantity) {
-            $product = $productRepository->find($id);
-            if ($product) {
-                $products[] = [
-                    'product' => $product,
-                    'quantity' => $quantity
-                ];
-                $total += $product->getPrice() * $quantity;
-            }
+            return $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
         }
 
         return $this->render('order/new.html.twig', [
-            'products' => $products,
-            'total' => $total
+            'cart' => $cart,
         ]);
     }
 
@@ -97,5 +81,16 @@ class OrderController extends AbstractController
         return $this->render('order/show.html.twig', [
             'order' => $order,
         ]);
+    }
+
+    private function getCart(EntityManagerInterface $entityManager): ?Cart
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return null;
+        }
+
+        $cart = $entityManager->getRepository(Cart::class)->findOneBy(['customer' => $user]);
+        return $cart;
     }
 }
