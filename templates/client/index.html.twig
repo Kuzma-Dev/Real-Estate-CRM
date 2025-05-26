@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Clients{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Clients</h1>
+        <a href="{{ path('app_client_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Client
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Client Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="buyer" {% if app.request.query.get('type') == 'buyer' %}selected{% endif %}>Buyer</option>
+                        <option value="seller" {% if app.request.query.get('type') == 'seller' %}selected{% endif %}>Seller</option>
+                        <option value="both" {% if app.request.query.get('type') == 'both' %}selected{% endif %}>Both</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="minBudget" class="form-label">Min Budget</label>
+                    <input type="number" name="minBudget" id="minBudget" class="form-control" value="{{ app.request.query.get('minBudget') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxBudget" class="form-label">Max Budget</label>
+                    <input type="number" name="maxBudget" id="maxBudget" class="form-control" value="{{ app.request.query.get('maxBudget') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ app.request.query.get('search') }}" placeholder="Name, email, or phone">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{{ path('app_client_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Type</th>
+                    <th>Budget</th>
+                    <th>Demands</th>
+                    <th>Deals</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('app_client_show', {'id': client.id}) }}" class="text-decoration-none">
+                                {{ client.firstName }} {{ client.lastName }}
+                            </a>
+                        </td>
+                        <td>
+                            <div><i class="fas fa-envelope"></i> {{ client.email }}</div>
+                            <div><i class="fas fa-phone"></i> {{ client.phone }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ client.clientType == 'buyer' ? 'primary' : (client.clientType == 'seller' ? 'success' : 'info') }}">
+                                {{ client.clientType|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if client.budget %}
+                                ${{ client.budget|number_format(0, '.', ',') }}
+                            {% else %}
+                                <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ path('app_client_demands', {'id': client.id}) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-list"></i> {{ client.demands|length }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ path('app_client_deals', {'id': client.id}) }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-handshake"></i> {{ client.deals|length }}
+                            </a>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ path('app_client_show', {'id': client.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('app_client_edit', {'id': client.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ path('app_activity_new', {'client': client.id}) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-calendar-plus"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle"></i> No clients found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if clients|length > 0 %}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(clients) }}
+        </div>
+    {% endif %}
+{% endblock %} 

@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Deals{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Deals</h1>
+        <a href="{{ path('app_deal_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Deal
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Deal Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="sale" {% if app.request.query.get('type') == 'sale' %}selected{% endif %}>Sale</option>
+                        <option value="rental" {% if app.request.query.get('type') == 'rental' %}selected{% endif %}>Rental</option>
+                        <option value="lease" {% if app.request.query.get('type') == 'lease' %}selected{% endif %}>Lease</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="pending" {% if app.request.query.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="under_contract" {% if app.request.query.get('status') == 'under_contract' %}selected{% endif %}>Under Contract</option>
+                        <option value="completed" {% if app.request.query.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if app.request.query.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="minPrice" class="form-label">Min Price</label>
+                    <input type="number" name="minPrice" id="minPrice" class="form-control" value="{{ app.request.query.get('minPrice') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxPrice" class="form-label">Max Price</label>
+                    <input type="number" name="maxPrice" id="maxPrice" class="form-control" value="{{ app.request.query.get('maxPrice') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="client" class="form-label">Client</label>
+                    <input type="text" name="client" id="client" class="form-control" value="{{ app.request.query.get('client') }}" placeholder="Client name">
+                </div>
+                <div class="col-md-3">
+                    <label for="property" class="form-label">Property</label>
+                    <input type="text" name="property" id="property" class="form-control" value="{{ app.request.query.get('property') }}" placeholder="Property title">
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" name="startDate" id="startDate" class="form-control" value="{{ app.request.query.get('startDate') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" name="endDate" id="endDate" class="form-control" value="{{ app.request.query.get('endDate') }}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{{ path('app_deal_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th>Commission</th>
+                    <th>Status</th>
+                    <th>Documents</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for deal in deals %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('app_property_show', {'id': deal.property.id}) }}" class="text-decoration-none">
+                                {{ deal.property.title }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ path('app_client_show', {'id': deal.client.id}) }}" class="text-decoration-none">
+                                {{ deal.client.firstName }} {{ deal.client.lastName }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ deal.dealType == 'sale' ? 'primary' : (deal.dealType == 'rental' ? 'success' : 'info') }}">
+                                {{ deal.dealType|title }}
+                            </span>
+                        </td>
+                        <td>${{ deal.price|number_format(0, '.', ',') }}</td>
+                        <td>${{ deal.commission|number_format(0, '.', ',') }}</td>
+                        <td>
+                            <span class="badge bg-{{ deal.status == 'completed' ? 'success' : (deal.status == 'under_contract' ? 'warning' : (deal.status == 'cancelled' ? 'danger' : 'secondary')) }}">
+                                {{ deal.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if deal.documents|length > 0 %}
+                                <a href="{{ path('app_deal_show', {'id': deal.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-file"></i> {{ deal.documents|length }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">No documents</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ path('app_deal_show', {'id': deal.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('app_deal_edit', {'id': deal.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ path('app_deal_upload_documents', {'id': deal.id}) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-upload"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle"></i> No deals found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if deals|length > 0 %}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(deals) }}
+        </div>
+    {% endif %}
+{% endblock %} 

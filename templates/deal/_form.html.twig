@@ -1,0 +1,131 @@
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+    <div class="row">
+        <div class="col-md-6">
+            {{ form_row(form.property, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.client, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.dealType, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.status, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.price, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.commission, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.notes, {
+                'attr': {'class': 'form-control', 'rows': 4},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="documents" data-prototype="{{ form_widget(form.documents.vars.prototype)|e('html_attr') }}">
+                        {% for document in form.documents %}
+                            <div class="document-item mb-2">
+                                <div class="input-group">
+                                    {{ form_widget(document, {'attr': {'class': 'form-control'}}) }}
+                                    <button type="button" class="btn btn-danger remove-document">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-success add-document mt-2">
+                        <i class="fas fa-plus"></i> Add Document
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ button_label|default('Save') }}
+            </button>
+            <a href="{{ path('app_deal_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to list
+            </a>
+        </div>
+    </div>
+{{ form_end(form) }}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const documentsContainer = document.querySelector('.documents');
+    const addDocumentButton = document.querySelector('.add-document');
+    const removeDocumentButtons = document.querySelectorAll('.remove-document');
+
+    // Add new document
+    addDocumentButton.addEventListener('click', function() {
+        const prototype = documentsContainer.dataset.prototype;
+        const newDocument = prototype.replace(/__name__/g, documentsContainer.children.length);
+        const documentDiv = document.createElement('div');
+        documentDiv.className = 'document-item mb-2';
+        documentDiv.innerHTML = `
+            <div class="input-group">
+                ${newDocument}
+                <button type="button" class="btn btn-danger remove-document">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        documentsContainer.appendChild(documentDiv);
+        addRemoveDocumentListener(documentDiv.querySelector('.remove-document'));
+    });
+
+    // Remove document
+    function addRemoveDocumentListener(button) {
+        button.addEventListener('click', function() {
+            this.closest('.document-item').remove();
+        });
+    }
+
+    // Add listeners to existing remove buttons
+    removeDocumentButtons.forEach(addRemoveDocumentListener);
+});
+</script>
+{% endblock %} 

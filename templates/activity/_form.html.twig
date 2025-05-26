@@ -1,0 +1,84 @@
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+    <div class="row">
+        <div class="col-md-6">
+            {{ form_row(form.type, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.status, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.title, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.description, {
+                'attr': {'class': 'form-control', 'rows': 4},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.startTime, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.endTime, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.client, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.property, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.notes, {
+                'attr': {'class': 'form-control', 'rows': 4},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ button_label|default('Save') }}
+            </button>
+            <a href="{{ path('app_activity_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to list
+            </a>
+        </div>
+    </div>
+{{ form_end(form) }} 

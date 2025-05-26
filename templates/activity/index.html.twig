@@ -1,0 +1,164 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activities{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Activities</h1>
+        <a href="{{ path('app_activity_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Activity
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Activity Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="viewing" {% if app.request.query.get('type') == 'viewing' %}selected{% endif %}>Property Viewing</option>
+                        <option value="meeting" {% if app.request.query.get('type') == 'meeting' %}selected{% endif %}>Client Meeting</option>
+                        <option value="negotiation" {% if app.request.query.get('type') == 'negotiation' %}selected{% endif %}>Negotiation</option>
+                        <option value="closing" {% if app.request.query.get('type') == 'closing' %}selected{% endif %}>Closing</option>
+                        <option value="other" {% if app.request.query.get('type') == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="scheduled" {% if app.request.query.get('status') == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="in_progress" {% if app.request.query.get('status') == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if app.request.query.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if app.request.query.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="client" class="form-label">Client</label>
+                    <input type="text" name="client" id="client" class="form-control" value="{{ app.request.query.get('client') }}" placeholder="Client name">
+                </div>
+                <div class="col-md-3">
+                    <label for="property" class="form-label">Property</label>
+                    <input type="text" name="property" id="property" class="form-control" value="{{ app.request.query.get('property') }}" placeholder="Property title">
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" name="startDate" id="startDate" class="form-control" value="{{ app.request.query.get('startDate') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" name="endDate" id="endDate" class="form-control" value="{{ app.request.query.get('endDate') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select name="priority" id="priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        <option value="high" {% if app.request.query.get('priority') == 'high' %}selected{% endif %}>High</option>
+                        <option value="medium" {% if app.request.query.get('priority') == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if app.request.query.get('priority') == 'low' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{{ path('app_activity_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Client</th>
+                    <th>Property</th>
+                    <th>Date & Time</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-{{ activity.type == 'viewing' ? 'primary' : (activity.type == 'meeting' ? 'success' : (activity.type == 'negotiation' ? 'warning' : (activity.type == 'closing' ? 'info' : 'secondary'))) }}">
+                                {{ activity.type|title }}
+                            </span>
+                        </td>
+                        <td>{{ activity.title }}</td>
+                        <td>
+                            {% if activity.client %}
+                                <a href="{{ path('app_client_show', {'id': activity.client.id}) }}" class="text-decoration-none">
+                                    {{ activity.client.firstName }} {{ activity.client.lastName }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if activity.property %}
+                                <a href="{{ path('app_property_show', {'id': activity.property.id}) }}" class="text-decoration-none">
+                                    {{ activity.property.title }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div><i class="fas fa-calendar"></i> {{ activity.startTime|date('M d, Y') }}</div>
+                            <div><i class="fas fa-clock"></i> {{ activity.startTime|date('H:i') }} - {{ activity.endTime|date('H:i') }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ activity.priority == 'high' ? 'danger' : (activity.priority == 'medium' ? 'warning' : 'info') }}">
+                                {{ activity.priority|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ activity.status == 'completed' ? 'success' : (activity.status == 'in_progress' ? 'warning' : (activity.status == 'cancelled' ? 'danger' : 'secondary')) }}">
+                                {{ activity.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ path('app_activity_show', {'id': activity.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('app_activity_edit', {'id': activity.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ path('app_activity_update_status', {'id': activity.id}) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle"></i> No activities found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if activities|length > 0 %}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(activities) }}
+        </div>
+    {% endif %}
+{% endblock %} 

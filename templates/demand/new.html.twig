@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Demand{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">New Demand</h3>
+                    </div>
+                    <div class="card-body">
+                        {{ form_start(form) }}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form_row(form.client) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_row(form.propertyType) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form_row(form.minPrice) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_row(form.maxPrice) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form_row(form.minBedrooms) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_row(form.minBathrooms) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form_row(form.minSquareFootage) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_row(form.location) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form_row(form.type) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_row(form.status) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {{ form_row(form.features) }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {{ form_row(form.notes) }}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Create</button>
+                                    <a href="{{ path('app_demand_index') }}" class="btn btn-secondary">Back to list</a>
+                                </div>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

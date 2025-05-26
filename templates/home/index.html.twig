@@ -1,196 +1,277 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Welcome to Our Store{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4">Welcome to Our E-Shop</h1>
-            <p class="text-xl text-gray-600">Discover our amazing products at great prices</p>
-        </header>
+    <div class="container-fluid">
+        <h1 class="mb-4">Dashboard</h1>
 
-        <section class="mb-12">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 class="text-2xl font-semibold mb-4">Search Products</h2>
-                <form method="get" action="{{ path('app_home') }}" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
-                            <input type="text" name="search" id="search" value="{{ search }}" 
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="Search products...">
-                        </div>
-                        <div>
-                            <label for="min_price" class="block text-sm font-medium text-gray-700">Min Price</label>
-                            <input type="number" name="min_price" id="min_price" value="{{ min_price }}" 
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="Min price">
-                        </div>
-                        <div>
-                            <label for="max_price" class="block text-sm font-medium text-gray-700">Max Price</label>
-                            <input type="number" name="max_price" id="max_price" value="{{ max_price }}" 
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="Max price">
-                        </div>
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Properties</h5>
+                        <h2 class="card-text">{{ stats.properties }}</h2>
+                        <a href="{{ path('app_property_index') }}" class="text-white">View all <i class="fas fa-arrow-right"></i></a>
                     </div>
-                    <div class="flex justify-end space-x-4">
-                        <a href="{{ path('app_home') }}" class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
-                            Clear
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Clients</h5>
+                        <h2 class="card-text">{{ stats.clients }}</h2>
+                        <a href="{{ path('app_client_index') }}" class="text-white">View all <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Deals</h5>
+                        <h2 class="card-text">{{ stats.deals }}</h2>
+                        <a href="{{ path('app_deal_index') }}" class="text-white">View all <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Demands</h5>
+                        <h2 class="card-text">{{ stats.demands }}</h2>
+                        <a href="{{ path('app_demand_index') }}" class="text-white">View all <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Active Deals</h5>
+                        <h2 class="card-text">{{ stats.activeDeals }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Completed Deals</h5>
+                        <h2 class="card-text">{{ stats.completedDeals }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Recent Properties -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Properties</h5>
+                        <a href="{{ path('app_property_new') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> New Property
                         </a>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                            Search
-                        </button>
                     </div>
-                </form>
-            </div>
-
-            <h2 class="text-2xl font-semibold mb-6">Featured Products</h2>
-            <div class="flex justify-end mb-4">
-                <a href="{{ path('app_cart_index') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
-                    View Cart
-                </a>
-            </div>
-            <div class="text-gray-600 mb-4">
-                Total products: {{ products|length }}
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {% for product in products %}
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        {% if product.imageName %}
-                            <img src="{{ asset('uploads/products/' ~ product.imageName) }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
-                        {% else %}
-                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                <span class="text-gray-400">No image available</span>
-                            </div>
-                        {% endif %}
-                        <div class="p-4">
-                            <h3 class="text-lg font-semibold mb-2">{{ product.name }}</h3>
-                            <p class="text-gray-600 mb-4">{{ product.description|slice(0, 100) }}{% if product.description|length > 100 %}...{% endif %}</p>
-                            <div class="flex flex-col space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xl font-bold text-blue-600">${{ product.price|number_format(2) }}</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <button type="button" onclick="decrementQuantity({{ product.id }})" class="bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">-</button>
-                                    <input type="number" id="quantity-{{ product.id }}" value="1" min="1" class="w-16 text-center border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <button type="button" onclick="incrementQuantity({{ product.id }})" class="bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300">+</button>
-                                </div>
-                                <form method="post" action="{{ path('app_cart_add', {'id': product.id}) }}" class="add-to-cart-form">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('add_to_cart') }}">
-                                    <input type="hidden" name="quantity" id="form-quantity-{{ product.id }}" value="1">
-                                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                                        Add to Cart
-                                    </button>
-                                </form>
-                                <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-center text-blue-500 hover:text-blue-700">
-                                    View Details
-                                </a>
-                            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for property in properties %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ path('app_property_show', {'id': property.id}) }}">
+                                                    {{ property.title }}
+                                                </a>
+                                            </td>
+                                            <td>{{ property.propertyType|title }}</td>
+                                            <td>${{ property.price|number_format(0, '.', ',') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ property.status == 'available' ? 'success' : (property.status == 'sold' ? 'danger' : 'warning') }}">
+                                                    {{ property.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No properties found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                {% else %}
-                    <div class="col-span-full text-center py-8">
-                        <p class="text-gray-500">No products found</p>
+                </div>
+            </div>
+
+            <!-- Recent Clients -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Clients</h5>
+                        <a href="{{ path('app_client_new') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> New Client
+                        </a>
                     </div>
-                {% endfor %}
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Contact</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in clients %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ path('app_client_show', {'id': client.id}) }}">
+                                                    {{ client.firstName }} {{ client.lastName }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ client.clientType == 'buyer' ? 'primary' : (client.clientType == 'seller' ? 'success' : 'info') }}">
+                                                    {{ client.clientType|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div><i class="fas fa-envelope"></i> {{ client.email }}</div>
+                                                <div><i class="fas fa-phone"></i> {{ client.phone }}</div>
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_activity_new', {'client': client.id}) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-calendar-plus"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No clients found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
 
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div class="bg-gray-100 rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Why Choose Us?</h2>
-                <ul class="space-y-2">
-                    <li class="flex items-center">
-                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Fast and reliable shipping
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Quality products
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Excellent customer service
-                    </li>
-                </ul>
+            <!-- Recent Deals -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Deals</h5>
+                        <a href="{{ path('app_deal_new') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> New Deal
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Client</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for deal in deals %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ path('app_property_show', {'id': deal.property.id}) }}">
+                                                    {{ deal.property.title }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_client_show', {'id': deal.client.id}) }}">
+                                                    {{ deal.client.firstName }} {{ deal.client.lastName }}
+                                                </a>
+                                            </td>
+                                            <td>${{ deal.price|number_format(0, '.', ',') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ deal.status == 'completed' ? 'success' : (deal.status == 'under_contract' ? 'warning' : (deal.status == 'cancelled' ? 'danger' : 'secondary')) }}">
+                                                    {{ deal.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No deals found</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-gray-100 rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Quick Links</h2>
-                <ul class="space-y-2">
-                    <li>
-                        <a href="{{ path('app_product_index') }}" class="text-blue-500 hover:text-blue-700">Browse All Products</a>
-                    </li>
-                    <li>
-                        <a href="{{ path('app_cart_index') }}" class="text-blue-500 hover:text-blue-700">View Shopping Cart</a>
-                    </li>
-                    <li>
-                        <a href="{{ path('app_order_index') }}" class="text-blue-500 hover:text-blue-700">View Orders</a>
-                    </li>
-                </ul>
+
+            <!-- Upcoming Activities -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Upcoming Activities</h5>
+                        <a href="{{ path('app_activity_new') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> New Activity
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Title</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in upcomingActivities %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-{{ activity.type == 'viewing' ? 'primary' : (activity.type == 'meeting' ? 'success' : (activity.type == 'negotiation' ? 'warning' : (activity.type == 'closing' ? 'info' : 'secondary'))) }}">
+                                                    {{ activity.type|title }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_activity_show', {'id': activity.id}) }}">
+                                                    {{ activity.title }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div><i class="fas fa-calendar"></i> {{ activity.startTime|date('M d, Y') }}</div>
+                                                <div><i class="fas fa-clock"></i> {{ activity.startTime|date('H:i') }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ activity.status == 'completed' ? 'success' : (activity.status == 'in_progress' ? 'warning' : (activity.status == 'cancelled' ? 'danger' : 'secondary')) }}">
+                                                    {{ activity.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No upcoming activities</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
     </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-        function incrementQuantity(productId) {
-            const input = document.getElementById(`quantity-${productId}`);
-            const formInput = document.getElementById(`form-quantity-${productId}`);
-            const newValue = parseInt(input.value) + 1;
-            input.value = newValue;
-            formInput.value = newValue;
-        }
-
-        function decrementQuantity(productId) {
-            const input = document.getElementById(`quantity-${productId}`);
-            const formInput = document.getElementById(`form-quantity-${productId}`);
-            const newValue = parseInt(input.value) - 1;
-            if (newValue >= 1) {
-                input.value = newValue;
-                formInput.value = newValue;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.add-to-cart-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(this);
-                    
-                    fetch(this.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const alert = document.createElement('div');
-                            alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-                            alert.textContent = data.message;
-                            document.body.appendChild(alert);
-                            setTimeout(() => alert.remove(), 3000);
-                        } else {
-                            throw new Error(data.message || 'Error adding product to cart');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        const alert = document.createElement('div');
-                        alert.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
-                        alert.textContent = error.message || 'Error adding product to cart';
-                        document.body.appendChild(alert);
-                        setTimeout(() => alert.remove(), 3000);
-                    });
-                });
-            });
-        });
-    </script>
 {% endblock %} 

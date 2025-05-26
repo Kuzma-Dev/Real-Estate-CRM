@@ -1,0 +1,164 @@
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+    <div class="row">
+        <div class="col-md-12">
+            {{ form_row(form.client, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.type, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.propertyType, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.minPrice, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.maxPrice, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.location, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-4">
+            {{ form_row(form.minBedrooms, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-4">
+            {{ form_row(form.minBathrooms, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-4">
+            {{ form_row(form.minSquareFootage, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Features</h5>
+                </div>
+                <div class="card-body">
+                    <div class="features" data-prototype="{{ form_widget(form.features.vars.prototype)|e('html_attr') }}">
+                        {% for feature in form.features %}
+                            <div class="feature-item mb-2">
+                                <div class="input-group">
+                                    {{ form_widget(feature, {'attr': {'class': 'form-control'}}) }}
+                                    <button type="button" class="btn btn-danger remove-feature">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-success add-feature mt-2">
+                        <i class="fas fa-plus"></i> Add Feature
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.notes, {
+                'attr': {'class': 'form-control', 'rows': 4},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            {{ form_row(form.status, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ button_label|default('Save') }}
+            </button>
+            <a href="{{ path('app_demand_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to list
+            </a>
+        </div>
+    </div>
+{{ form_end(form) }}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const featuresContainer = document.querySelector('.features');
+    const addFeatureButton = document.querySelector('.add-feature');
+    const removeFeatureButtons = document.querySelectorAll('.remove-feature');
+
+    // Add new feature
+    addFeatureButton.addEventListener('click', function() {
+        const prototype = featuresContainer.dataset.prototype;
+        const newFeature = prototype.replace(/__name__/g, featuresContainer.children.length);
+        const featureDiv = document.createElement('div');
+        featureDiv.className = 'feature-item mb-2';
+        featureDiv.innerHTML = `
+            <div class="input-group">
+                ${newFeature}
+                <button type="button" class="btn btn-danger remove-feature">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        featuresContainer.appendChild(featureDiv);
+        addRemoveFeatureListener(featureDiv.querySelector('.remove-feature'));
+    });
+
+    // Remove feature
+    function addRemoveFeatureListener(button) {
+        button.addEventListener('click', function() {
+            this.closest('.feature-item').remove();
+        });
+    }
+
+    // Add listeners to existing remove buttons
+    removeFeatureButtons.forEach(addRemoveFeatureListener);
+});
+</script>
+{% endblock %} 

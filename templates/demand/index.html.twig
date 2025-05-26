@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Demands{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Demands</h1>
+        <a href="{{ path('app_demand_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Demand
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Demand Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="buy" {% if app.request.query.get('type') == 'buy' %}selected{% endif %}>Buy</option>
+                        <option value="rent" {% if app.request.query.get('type') == 'rent' %}selected{% endif %}>Rent</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="propertyType" class="form-label">Property Type</label>
+                    <select name="propertyType" id="propertyType" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="house" {% if app.request.query.get('propertyType') == 'house' %}selected{% endif %}>House</option>
+                        <option value="apartment" {% if app.request.query.get('propertyType') == 'apartment' %}selected{% endif %}>Apartment</option>
+                        <option value="condo" {% if app.request.query.get('propertyType') == 'condo' %}selected{% endif %}>Condo</option>
+                        <option value="townhouse" {% if app.request.query.get('propertyType') == 'townhouse' %}selected{% endif %}>Townhouse</option>
+                        <option value="land" {% if app.request.query.get('propertyType') == 'land' %}selected{% endif %}>Land</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="minPrice" class="form-label">Min Price</label>
+                    <input type="number" name="minPrice" id="minPrice" class="form-control" value="{{ app.request.query.get('minPrice') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="maxPrice" class="form-label">Max Price</label>
+                    <input type="number" name="maxPrice" id="maxPrice" class="form-control" value="{{ app.request.query.get('maxPrice') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="location" class="form-label">Location</label>
+                    <input type="text" name="location" id="location" class="form-control" value="{{ app.request.query.get('location') }}" placeholder="City or neighborhood">
+                </div>
+                <div class="col-md-3">
+                    <label for="bedrooms" class="form-label">Min Bedrooms</label>
+                    <input type="number" name="bedrooms" id="bedrooms" class="form-control" value="{{ app.request.query.get('bedrooms') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="bathrooms" class="form-label">Min Bathrooms</label>
+                    <input type="number" name="bathrooms" id="bathrooms" class="form-control" value="{{ app.request.query.get('bathrooms') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if app.request.query.get('status') == 'active' %}selected{% endif %}>Active</option>
+                        <option value="in_progress" {% if app.request.query.get('status') == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if app.request.query.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if app.request.query.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{{ path('app_demand_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th>Property Type</th>
+                    <th>Price Range</th>
+                    <th>Location</th>
+                    <th>Requirements</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for demand in demands %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('app_client_show', {'id': demand.client.id}) }}" class="text-decoration-none">
+                                {{ demand.client.firstName }} {{ demand.client.lastName }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ demand.type == 'buy' ? 'primary' : 'success' }}">
+                                {{ demand.type|title }}
+                            </span>
+                        </td>
+                        <td>{{ demand.propertyType|title }}</td>
+                        <td>
+                            ${{ demand.minPrice|number_format(0, '.', ',') }} - 
+                            ${{ demand.maxPrice|number_format(0, '.', ',') }}
+                        </td>
+                        <td>{{ demand.location }}</td>
+                        <td>
+                            <div><i class="fas fa-bed"></i> {{ demand.bedrooms }} beds</div>
+                            <div><i class="fas fa-bath"></i> {{ demand.bathrooms }} baths</div>
+                            {% if demand.features|length > 0 %}
+                                <div class="mt-1">
+                                    {% for feature in demand.features %}
+                                        <span class="badge bg-light text-dark">{{ feature }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ demand.status == 'active' ? 'success' : (demand.status == 'in_progress' ? 'warning' : (demand.status == 'cancelled' ? 'danger' : 'secondary')) }}">
+                                {{ demand.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ path('app_demand_show', {'id': demand.id}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('app_demand_edit', {'id': demand.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ path('app_property_new', {'demand': demand.id}) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-home"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle"></i> No demands found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if demands|length > 0 %}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(demands) }}
+        </div>
+    {% endif %}
+{% endblock %} 

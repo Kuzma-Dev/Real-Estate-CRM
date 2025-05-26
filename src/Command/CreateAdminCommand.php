@@ -2,7 +2,8 @@
 
 namespace App\Command;
 
-use App\Entity\Customer;
+use App\Entity\User;
+use App\Entity\Agent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -28,27 +29,30 @@ class CreateAdminCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $email = $io->ask('Enter admin email', 'admin@example.com');
-        $password = $io->askHidden('Enter admin password');
-        $firstName = $io->ask('Enter first name', 'Admin');
-        $lastName = $io->ask('Enter last name', 'User');
+        $email = $io->ask('Email', 'admin@admin.com');
+        $password = $io->askHidden('Password');
+        $name = $io->ask('Name', 'Administrator');
 
-        $user = new Customer();
+        $user = new User();
         $user->setEmail($email);
-        $user->setRoles(['ROLE_ADMIN']);
-        $user->setFirstName($firstName);
-        $user->setLastName($lastName);
-        
-        $hashedPassword = $this->passwordHasher->hashPassword(
-            $user,
-            $password
-        );
+        $user->setName($name);
+        $user->setRoles(['ROLE_ADMIN', 'ROLE_AGENT']);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
 
+        $agent = new Agent();
+        $agent->setFirstName('Admin');
+        $agent->setLastName('User');
+        $agent->setCommission(0.0);
+        $agent->setUser($user);
+        $user->setAgent($agent);
+
         $this->entityManager->persist($user);
+        $this->entityManager->persist($agent);
         $this->entityManager->flush();
 
-        $io->success('Admin user created successfully!');
+        $io->success('Admin user created successfully.');
 
         return Command::SUCCESS;
     }

@@ -1,0 +1,133 @@
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+    <div class="row">
+        <div class="col-md-6">
+            {{ form_row(form.firstName, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.lastName, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.email, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.phone, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            {{ form_row(form.clientType, {
+                'attr': {'class': 'form-select'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_row(form.budget, {
+                'attr': {'class': 'form-control'},
+                'label_attr': {'class': 'form-label'}
+            }) }}
+        </div>
+    </div>
+
+    {% if not form.vars.data.id %}
+        <div class="row mt-3">
+            <div class="col-md-12">
+                {{ form_row(form.password, {
+                    'attr': {'class': 'form-control'},
+                    'label_attr': {'class': 'form-label'}
+                }) }}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="preferences" data-prototype="{{ form_widget(form.preferences.vars.prototype)|e('html_attr') }}">
+                        {% for preference in form.preferences %}
+                            <div class="preference-item mb-2">
+                                <div class="input-group">
+                                    {{ form_widget(preference, {'attr': {'class': 'form-control'}}) }}
+                                    <button type="button" class="btn btn-danger remove-preference">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-success add-preference mt-2">
+                        <i class="fas fa-plus"></i> Add Preference
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ button_label|default('Save') }}
+            </button>
+            <a href="{{ path('app_client_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to list
+            </a>
+        </div>
+    </div>
+{{ form_end(form) }}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const preferencesContainer = document.querySelector('.preferences');
+    const addPreferenceButton = document.querySelector('.add-preference');
+    const removePreferenceButtons = document.querySelectorAll('.remove-preference');
+
+    // Add new preference
+    addPreferenceButton.addEventListener('click', function() {
+        const prototype = preferencesContainer.dataset.prototype;
+        const newPreference = prototype.replace(/__name__/g, preferencesContainer.children.length);
+        const preferenceDiv = document.createElement('div');
+        preferenceDiv.className = 'preference-item mb-2';
+        preferenceDiv.innerHTML = `
+            <div class="input-group">
+                ${newPreference}
+                <button type="button" class="btn btn-danger remove-preference">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        preferencesContainer.appendChild(preferenceDiv);
+        addRemovePreferenceListener(preferenceDiv.querySelector('.remove-preference'));
+    });
+
+    // Remove preference
+    function addRemovePreferenceListener(button) {
+        button.addEventListener('click', function() {
+            this.closest('.preference-item').remove();
+        });
+    }
+
+    // Add listeners to existing remove buttons
+    removePreferenceButtons.forEach(addRemovePreferenceListener);
+});
+</script>
+{% endblock %} 
