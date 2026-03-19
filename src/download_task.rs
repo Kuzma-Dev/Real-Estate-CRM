@@ -5,6 +5,8 @@ use tokio::time::{sleep, Duration, Instant};
 use tokio::io::AsyncWriteExt;
 use tracing::{debug, error, info, warn};
 use futures::StreamExt;
+use std::sync::Arc;
+use std::path::PathBuf;
 
 pub struct DownloadTask {
     request: DownloadRequest,
@@ -197,7 +199,7 @@ mod tests {
             ),
             client: reqwest::Client::new(),
             config,
-            _permit: Semaphore::new(1).acquire_owned().await.unwrap(),
+            _permit: Arc::new(Semaphore::new(1)).acquire_owned().await.unwrap(),
         };
 
         let delay1 = task.calculate_backoff_delay(1);
@@ -210,7 +212,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_download_with_retry() -> Result<()> {
+    async fn test_download_with_retry() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let config = DownloadConfig {
             max_retries: 2,
@@ -223,7 +225,7 @@ mod tests {
         );
 
         let client = reqwest::Client::new();
-        let permit = Semaphore::new(1).acquire_owned().await.unwrap();
+        let permit = Arc::new(Semaphore::new(1)).acquire_owned().await.unwrap();
         
         let task = DownloadTask::new(request, client, config, permit);
         let result = task.execute().await;
