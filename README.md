@@ -57,7 +57,18 @@ async-download-manager \
   --max-retries 5 \
   --timeout 60 \
   --chunk-size 16384 \
+  --adaptive-buffering \
+  --min-buffer-size 8192 \
+  --max-buffer-size 131072 \
   --log-level debug
+
+# Production settings with graceful shutdown
+async-download-manager \
+  --file critical_downloads.txt \
+  --output ./production \
+  --max-concurrent 10 \
+  --adaptive-buffering \
+  --log-level info
 ```
 
 ### URL File Format
@@ -107,6 +118,8 @@ pub struct DownloadManager {
     semaphore: Arc<Semaphore>,           // Backpressure control
     task_sender: mpsc::UnboundedSender<DownloadRequest>,
     client: reqwest::Client,              // Reusable HTTP client
+    shutdown_tx: broadcast::Sender<()>,     // Graceful shutdown
+    shutdown_rx: broadcast::Receiver<()>,
 }
 ```
 
@@ -114,9 +127,35 @@ pub struct DownloadManager {
 - Semaphore-based concurrency limiting
 - Unbounded channel for task submission
 - `FuturesUnordered` for efficient task orchestration
-- Graceful shutdown handling
+- Graceful shutdown with `tokio::signal::ctrl_c()`
+- Broadcast channels for clean task cancellation
 
-#### 2. DownloadTask
+#### 3. Backpressure Management
+The download manager implements sophisticated backpressure control to prevent system overload:
+
+**Semaphore-Based Flow Control:**
+```rust
+let semaphore = Arc::new(Semaphore::new(config.max_concurrent_downloads));
+
+// Acquire permit before download
+let permit = semaphore.acquire_owned().await?;
+
+// Permit automatically released on task completion/drop
+```
+
+**Benefits:**
+- **Memory Protection**: Prevents excessive concurrent downloads from exhausting RAM
+- **Network Throttling**: Avoids overwhelming network interfaces or remote servers
+- **File Descriptor Limits**: Controls concurrent file handles to prevent OS limits
+- **Graceful Degradation**: System remains responsive under heavy load
+
+**Implementation Details:**
+- Uses `OwnedSemaphorePermit` for automatic resource cleanup
+- `try_acquire_owned()` for non-blocking slot acquisition
+- Proper error handling for semaphore closure scenarios
+- Integration with graceful shutdown for clean resource release
+
+#### 4. DownloadTask
 ```rust
 pub struct DownloadTask {
     request: DownloadRequest,
@@ -127,9 +166,11 @@ pub struct DownloadTask {
 ```
 
 **Key Features:**
-- Exponential backoff with jitter: `delay = base_delay * 2^(attempt-1) + jitter`
-- Zero-copy streaming: `response.bytes_stream()` → `AsyncWriteExt`
+- Exponential backoff with jitter (±25% base delay + 5% exponential delay)
+- Adaptive buffer sizing (4KB-64KB dynamic based on throughput)
+- Zero-copy streaming with `AsyncWriteExt`
 - Content-Length validation for integrity checks
+- Graceful shutdown with `tokio::signal::ctrl_c()`
 - Atomic file operations with proper cleanup
 
 #### 3. Backpressure Management

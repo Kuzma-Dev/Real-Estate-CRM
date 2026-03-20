@@ -20,6 +20,9 @@ pub struct DownloadConfig {
     pub chunk_size: usize,
     pub timeout_seconds: u64,
     pub user_agent: String,
+    pub adaptive_buffering: bool,
+    pub min_buffer_size: usize,
+    pub max_buffer_size: usize,
 }
 
 impl Default for DownloadConfig {
@@ -32,6 +35,9 @@ impl Default for DownloadConfig {
             chunk_size: 8192,
             timeout_seconds: 30,
             user_agent: "async-download-manager/0.1.0".to_string(),
+            adaptive_buffering: true,
+            min_buffer_size: 4096,
+            max_buffer_size: 65536, // 64KB max
         }
     }
 }

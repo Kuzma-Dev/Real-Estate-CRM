@@ -107,18 +107,29 @@ impl DownloadTask {
         let mut downloaded_bytes = 0u64;
         let mut stream = response.bytes_stream();
 
+        // Adaptive buffer sizing based on network performance
+        let mut buffer_size = self.config.chunk_size;
+        let mut last_throughput_sample = std::time::Instant::now();
+        let mut bytes_since_sample = 0u64;
+        const SAMPLE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(1);
+
         while let Some(chunk_result) = stream.next().await {
             let chunk: bytes::Bytes = chunk_result.map_err(|e| DownloadError::RequestError(e))?;
             
+            // Use adaptive buffer size if enabled
+            if self.config.adaptive_buffering {
+                self.calculate_adaptive_buffer_size(chunk.len(), &mut buffer_size, &mut bytes_since_sample, &mut last_throughput_sample, SAMPLE_INTERVAL);
+            }
+
             file.write_all(&chunk).await
                 .map_err(|e| DownloadError::IoError(e))?;
             
             downloaded_bytes += chunk.len() as u64;
-            
+
             if content_length > 0 {
                 let progress = (downloaded_bytes as f64 / content_length as f64) * 100.0;
-                debug!("Download progress: {:.1}% ({} / {} bytes)", 
-                       progress, downloaded_bytes, content_length);
+                debug!("Download progress: {:.1}% ({} / {} bytes), buffer: {}B", 
+                       progress, downloaded_bytes, content_length, buffer_size);
             }
         }
 
@@ -135,21 +146,54 @@ impl DownloadTask {
         Ok(downloaded_bytes)
     }
 
+    fn calculate_adaptive_buffer_size(&self, chunk_size: usize, current_buffer: &mut usize, bytes_since_sample: &mut u64, last_sample: &mut std::time::Instant, sample_interval: std::time::Duration) {
+        *bytes_since_sample += chunk_size as u64;
+        
+        // Sample throughput every second
+        if last_sample.elapsed() >= sample_interval {
+            let throughput = *bytes_since_sample as f64 / last_sample.elapsed().as_secs_f64();
+            
+            // Adjust buffer size based on throughput
+            if throughput > 10_000.0 * 1024.0 { // > 10 MB/s
+                *current_buffer = std::cmp::min(*current_buffer * 2, self.config.max_buffer_size);
+            } else if throughput < 1_000.0 * 1024.0 { // < 1 MB/s
+                *current_buffer = std::cmp::max(*current_buffer / 2, self.config.min_buffer_size);
+            }
+            
+            debug!("Throughput: {:.2} MB/s, adjusted buffer to: {} bytes", 
+                   throughput / (1024.0 * 1024.0), *current_buffer);
+            
+            *bytes_since_sample = 0;
+            *last_sample = std::time::Instant::now();
+        }
+    }
+
     fn calculate_backoff_delay(&self, attempt: usize) -> u64 {
         let base_delay = self.config.base_delay_ms;
         let max_delay = self.config.max_delay_ms;
         
+        // Exponential backoff: delay = base_delay * 2^(attempt-1)
         let exponential_delay = base_delay * (2_u64.pow(attempt.saturating_sub(1) as u32));
         
-        let jitter = if exponential_delay > 100 {
-            fastrand::u64(0..=(exponential_delay / 10))
+        // Add jitter to prevent thundering herd (±25% of base delay)
+        let jitter_range = base_delay / 4; // 25% of base delay
+        let jitter = if jitter_range > 0 {
+            fastrand::u64(0..=jitter_range)
         } else {
             0
         };
-
-        let delay = exponential_delay + jitter;
         
-        std::cmp::min(delay, max_delay)
+        // Add additional jitter for larger delays to prevent synchronized retries
+        let additional_jitter = if exponential_delay > 5000 {
+            fastrand::u64(0..=(exponential_delay / 20)) // 5% of exponential delay
+        } else {
+            0
+        };
+        
+        let total_delay = exponential_delay + jitter + additional_jitter;
+        
+        // Cap at maximum delay
+        std::cmp::min(total_delay, max_delay)
     }
 
     async fn verify_download(&self, expected_size: Option<u64>) -> Result<(), DownloadError> {

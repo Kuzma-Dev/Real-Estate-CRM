@@ -1,10 +1,9 @@
 use crate::{DownloadConfig, DownloadRequest, DownloadResult, DownloadError};
 use crate::download_task::DownloadTask;
-use tokio::sync::{mpsc, Semaphore};
+use tokio::sync::{mpsc, Semaphore, broadcast};
 use tokio::time::{timeout, Duration};
 use tracing::{debug, error, info, warn};
 use anyhow::{Context, Result};
-use std::path::PathBuf;
 use std::sync::Arc;
 use futures::stream::{StreamExt, FuturesUnordered};
 use std::collections::BinaryHeap;
@@ -42,6 +41,8 @@ pub struct DownloadManager {
     task_sender: mpsc::UnboundedSender<DownloadRequest>,
     task_receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<DownloadRequest>>>,
     client: reqwest::Client,
+    shutdown_tx: broadcast::Sender<()>,
+    shutdown_rx: broadcast::Receiver<()>,
 }
 
 impl DownloadManager {
@@ -53,6 +54,7 @@ impl DownloadManager {
             .context("Failed to create HTTP client")?;
 
         let (task_sender, task_receiver) = mpsc::unbounded_channel();
+        let (shutdown_tx, shutdown_rx) = broadcast::channel(1);
         let semaphore = Arc::new(Semaphore::new(config.max_concurrent_downloads));
 
         Ok(Self {
@@ -61,6 +63,8 @@ impl DownloadManager {
             task_sender,
             task_receiver: Arc::new(tokio::sync::Mutex::new(task_receiver)),
             client,
+            shutdown_tx,
+            shutdown_rx,
         })
     }
 
@@ -84,35 +88,83 @@ impl DownloadManager {
         Ok(submitted)
     }
 
-    pub async fn process_queue(&self) -> Vec<DownloadResult> {
+    pub async fn process_queue_with_graceful_shutdown(self) -> Vec<DownloadResult> {
         let mut results = Vec::new();
         let mut active_downloads = FuturesUnordered::new();
         let mut receiver = self.task_receiver.lock().await;
+        let mut shutdown_rx = self.shutdown_rx.resubscribe();
 
         loop {
             tokio::select! {
+                // Handle graceful shutdown signal
+                _ = tokio::signal::ctrl_c() => {
+                    info!("🛑 Received Ctrl+C, initiating graceful shutdown...");
+                    let _ = self.shutdown_tx.send(());
+                    break;
+                },
+                
+                // Handle shutdown broadcast
+                _ = shutdown_rx.recv() => {
+                    info!("📡 Shutdown signal received, stopping new tasks...");
+                    break;
+                },
+                
+                // Process new download requests
                 Some(request) = receiver.recv() => {
                     if let Ok(permit) = self.semaphore.clone().try_acquire_owned() {
+                        let mut shutdown_rx = self.shutdown_rx.resubscribe();
                         let task = DownloadTask::new(
-                            request,
+                            request.clone(),
                             self.client.clone(),
                             (*self.config).clone(),
                             permit,
                         );
-                        active_downloads.push(tokio::spawn(task.execute()));
+                        active_downloads.push(tokio::spawn(async move {
+                            tokio::select! {
+                                result = task.execute() => result,
+                                _ = shutdown_rx.recv() => {
+                                    DownloadResult::failure(request, "Task cancelled due to shutdown".to_string())
+                                }
+                            }
+                        }));
                     } else {
                         warn!("Download queue at capacity, waiting for slot...");
-                        if let Ok(permit) = self.semaphore.clone().acquire_owned().await {
-                            let task = DownloadTask::new(
-                                request,
-                                self.client.clone(),
-                                (*self.config).clone(),
-                                permit,
-                            );
-                            active_downloads.push(tokio::spawn(task.execute()));
+                        let mut shutdown_rx = self.shutdown_rx.resubscribe();
+                        tokio::select! {
+                            permit = self.semaphore.clone().acquire_owned() => {
+                                match permit {
+                                    Ok(permit) => {
+                                        let mut shutdown_rx = self.shutdown_rx.resubscribe();
+                                        let task = DownloadTask::new(
+                                            request.clone(),
+                                            self.client.clone(),
+                                            (*self.config).clone(),
+                                            permit,
+                                        );
+                                        active_downloads.push(tokio::spawn(async move {
+                                            tokio::select! {
+                                                result = task.execute() => result,
+                                                _ = shutdown_rx.recv() => {
+                                                    DownloadResult::failure(request, "Task cancelled due to shutdown".to_string())
+                                                }
+                                            }
+                                        }));
+                                    }
+                                    Err(_) => {
+                                        warn!("Failed to acquire semaphore permit");
+                                        break;
+                                    }
+                                }
+                            }
+                            _ = shutdown_rx.recv() => {
+                                info!("Shutdown received while waiting for semaphore");
+                                break;
+                            }
                         }
                     }
                 }
+                
+                // Handle completed downloads
                 Some(result) = active_downloads.next() => {
                     match result {
                         Ok(download_result) => {
@@ -124,16 +176,16 @@ impl DownloadManager {
                         }
                     }
                 }
-                else => {
-                    break;
-                }
             }
 
+            // Check if we should exit
             if active_downloads.is_empty() && receiver.is_empty() {
+                info!("All downloads completed and queue empty");
                 break;
             }
         }
 
+        // Wait for remaining active downloads to complete or be cancelled
         while let Some(result) = active_downloads.next().await {
             match result {
                 Ok(download_result) => {
@@ -146,6 +198,7 @@ impl DownloadManager {
             }
         }
 
+        info!("Graceful shutdown complete");
         results
     }
 

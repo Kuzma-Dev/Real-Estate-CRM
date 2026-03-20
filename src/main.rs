@@ -46,6 +46,18 @@ struct Args {
     #[arg(long, default_value = "8192")]
     chunk_size: usize,
 
+    /// Enable adaptive buffer sizing based on network throughput
+    #[arg(long)]
+    adaptive_buffering: bool,
+
+    /// Minimum buffer size for adaptive buffering (bytes)
+    #[arg(long, default_value = "4096")]
+    min_buffer_size: usize,
+
+    /// Maximum buffer size for adaptive buffering (bytes)
+    #[arg(long, default_value = "65536")]
+    max_buffer_size: usize,
+
     /// Log level
     #[arg(long, value_enum, default_value = "info")]
     log_level: LogLevel,
@@ -125,6 +137,9 @@ async fn main() -> Result<()> {
         chunk_size: args.chunk_size,
         timeout_seconds: args.timeout,
         user_agent: args.user_agent,
+        adaptive_buffering: args.adaptive_buffering,
+        min_buffer_size: args.min_buffer_size,
+        max_buffer_size: args.max_buffer_size,
     };
 
     let manager = DownloadManager::new(config)?;
@@ -181,8 +196,8 @@ async fn main() -> Result<()> {
         manager.submit_download(request.clone()).await?;
     }
 
-    info!("⏳ Processing download queue...");
-    let results = manager.process_queue().await;
+    // Use graceful shutdown processing
+    let results = manager.process_queue_with_graceful_shutdown().await;
 
     let duration = start_time.elapsed();
     let successful = results.iter().filter(|r| r.success).count();
@@ -207,7 +222,6 @@ async fn main() -> Result<()> {
         }
     }
 
-    manager.shutdown().await?;
     info!("🏁 Async Download Manager finished");
 
     Ok(())
